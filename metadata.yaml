@@ -1,6 +1,6 @@
-name: lolicon api色图插件 # 这是你的插件的唯一识别名。
-desc: setu插件 # 插件简短描述
-help: 输入 /keyword 查看关键词回复帮助。 # 插件的帮助信息
-version: v2.0 # 插件版本号。格式：v1.1.1 或者 v1.1
-author: FateTrial # 作者
-repo: https://github.com/FateTrial/astrbot_plugin_lolicon_image-master # 插件的仓库地址
+name: astrbot_plugin_lolicon_image_master
+desc: 基于 lolicon API 的随机涩图插件，支持关键词搜索、R18、CD、白/黑名单、代理、CDN 替换、AI 过滤等。
+help: 输入 /setu_help 查看完整帮助。
+version: v2.2.0
+author: FateTrial
+repo: https://github.com/FateTrial/astrbot_plugin_lolicon_image-master

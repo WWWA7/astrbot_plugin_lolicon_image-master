@@ -1,0 +1,152 @@
+{
+  "cooldown": {
+    "description": "冷却时间（秒）",
+    "type": "int",
+    "hint": "用户两次成功调用涩图指令的最小间隔；0 表示不限制",
+    "default": 10
+  },
+  "cd_scope": {
+    "description": "冷却作用范围",
+    "type": "string",
+    "hint": "user=按用户独立计时；group=同一群内所有人共用一个 CD（私聊仍按用户）",
+    "default": "user",
+    "options": ["user", "group"]
+  },
+  "max_concurrency": {
+    "description": "最大并发请求数",
+    "type": "int",
+    "hint": "同一时刻最多向 lolicon API 发起的请求数",
+    "default": 10
+  },
+  "request_timeout": {
+    "description": "请求超时时间（秒）",
+    "type": "int",
+    "default": 10
+  },
+  "api_provider": {
+    "description": "API 提供方",
+    "type": "string",
+    "hint": "lolicon=https://api.lolicon.app/setu/v2 (支持 tag 标签搜索、混合 R18、excludeAI)；mossia=https://api.mossia.top/duckMo (不支持标签搜索，R18 仅 0/1)",
+    "default": "lolicon",
+    "options": ["lolicon", "mossia"]
+  },
+  "api_url": {
+    "description": "API 地址覆盖",
+    "type": "string",
+    "hint": "留空则按 api_provider 自动选择默认地址；填入完整 URL 可使用自建反代或镜像（必须与所选 provider 的协议格式一致）",
+    "default": ""
+  },
+  "api_size": {
+    "description": "向 API 请求的图片尺寸",
+    "type": "string",
+    "hint": "对应 lolicon 响应里的 urls.<size> 字段，越大越清晰但越慢",
+    "default": "regular",
+    "options": ["original", "regular", "small", "thumb", "mini"]
+  },
+  "display_size": {
+    "description": "消息端渲染尺寸",
+    "type": "string",
+    "hint": "AstrBot 渲染图片消息时使用的尺寸标签",
+    "default": "small",
+    "options": ["original", "large", "small"]
+  },
+  "proxy": {
+    "description": "HTTP 代理地址",
+    "type": "string",
+    "hint": "如 http://127.0.0.1:7890；为空则直连。需要 httpx>=0.26",
+    "default": ""
+  },
+  "image_cdn_replace": {
+    "description": "图片 CDN 替换域名",
+    "type": "string",
+    "hint": "把响应中的 i.pixiv.re / i.pximg.net 替换为你的反代域名（不带 https://）；为空不替换",
+    "default": ""
+  },
+  "exclude_ai": {
+    "description": "排除 AI 生成图片",
+    "type": "bool",
+    "hint": "开启后会请求 lolicon API 过滤 AI 作品",
+    "default": false
+  },
+  "show_image_info": {
+    "description": "随图展示元信息",
+    "type": "bool",
+    "hint": "开启后附带标题、作者、PID、部分标签",
+    "default": false
+  },
+  "r18_mode": {
+    "description": "R18 模式",
+    "type": "string",
+    "hint": "off=完全禁用；on=允许（仅 /taisele 等指令返回 R18）；mixed=普通指令也会随机混入 R18",
+    "default": "off",
+    "options": ["off", "on", "mixed"]
+  },
+  "enable_r18_command": {
+    "description": "启用 /taisele 等 R18 指令",
+    "type": "bool",
+    "default": true
+  },
+  "r18_in_group": {
+    "description": "允许群聊触发 R18",
+    "type": "bool",
+    "hint": "关闭后群聊里不会返回 R18，只在私聊允许",
+    "default": false
+  },
+  "enable_llm_tool": {
+    "description": "向 LLM 注册 send_setu_image 工具",
+    "type": "bool",
+    "hint": "开启后 LLM 可在对话中自主调用本插件发图；关闭后仅指令可用",
+    "default": true
+  },
+  "tip_message": {
+    "description": "发图前的提示语",
+    "type": "string",
+    "hint": "留空表示不发送提示语",
+    "default": "来咯 👇"
+  },
+  "whitelist_users": {
+    "description": "用户白名单",
+    "type": "list",
+    "hint": "填入后仅这些用户/群聊允许使用，留空表示不启用白名单",
+    "default": []
+  },
+  "whitelist_groups": {
+    "description": "群聊白名单",
+    "type": "list",
+    "default": []
+  },
+  "blacklist_users": {
+    "description": "用户黑名单",
+    "type": "list",
+    "default": []
+  },
+  "blacklist_groups": {
+    "description": "群聊黑名单",
+    "type": "list",
+    "default": []
+  },
+  "r18_whitelist_users": {
+    "description": "R18 用户白名单",
+    "type": "list",
+    "hint": "填入后仅这些用户允许触发 R18 内容；留空表示不启用 R18 白名单（遵循全局 r18_mode 设置）",
+    "default": []
+  },
+  "r18_whitelist_groups": {
+    "description": "R18 群聊白名单",
+    "type": "list",
+    "hint": "填入后仅这些群允许触发 R18 内容；留空表示不启用 R18 群白名单",
+    "default": []
+  },
+  "r18_blacklist_users": {
+    "description": "R18 用户黑名单",
+    "type": "list",
+    "hint": "这些用户即使 r18_mode=on 也无法获取 R18 图片",
+    "default": []
+  },
+  "r18_blacklist_groups": {
+    "description": "R18 群聊黑名单",
+    "type": "list",
+    "hint": "这些群即使 r18_in_group=true 也无法获取 R18 图片",
+    "default": []
+  }
+}

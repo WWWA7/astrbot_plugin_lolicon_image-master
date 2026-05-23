@@ -1,36 +1,72 @@
-# setu
+# astrbot_plugin_lolicon_image_master
 
-基于原作者插件进行修改！原作者仓库链接：[astrbot_plugin_lolicon_image-master](https://github.com/rikkamiss/astrbot_plugin_lolicon_image)
+AstrBot 随机涩图插件，支持 [lolicon API v2](https://api.lolicon.app/#/setu) 和 [mossia API](https://api.mossia.top/duckMo) 两种图源切换。
 
-*修改说明:**
-1.  **导入 `asyncio`:** 用于获取当前时间。
-2.  **添加 `self.cd` 和 `self.last_usage`:**
-    *   `self.cd`: 存储冷却时间，默认为 10 秒。
-    *   `self.last_usage`: 字典，存储每个用户上次使用 `/setu` 指令的时间。
-3.  **修改 `setu` 方法:**
-    *   获取当前时间 `now`。
-    *   检查用户是否在冷却时间内。如果在冷却时间内，回复剩余时间并返回。
-    *   如果不在冷却时间内，执行原有的涩图获取逻辑，并在成功发送图片后更新 `last_usage`。
-4.  **添加 `setucd` 指令:**
-    *   `@filter.command("setucd")` 注册 `setucd` 指令，用于设置冷却时间。
-    *   `async def set_setu_cd(self, event: AstrMessageEvent, cd: int)`:  接收用户输入的冷却时间 `cd`。
-    *   检查 `cd` 是否大于 0，如果不是则返回错误消息。
-    *   更新 `self.cd` 的值，并返回设置成功的消息
-5.  **添加 `setu_help` 指令:**
-    *   `@filter.command("setu_help")` 注册 `setu_help` 指令。
-    *   `async def setu_help(self, event: AstrMessageEvent)`:  定义 `setu_help` 方法。
-    *   `help_text`: 包含插件的使用说明、可用命令和注意事项的文本。
-    *   使用 `yield event.plain_result(help_text)` 发送帮助文本。
-6. **添加 `taisele` 指令:**
-   * 基于原作者的setu插件进行功能升级，使机器人可以发送R18图片
-      
-**使用方法:**
-1.  重新加载或重启你的 AstrBot 插件。
-4.  使用  `/setu_help`获取使用帮助
-2.  使用 `/setu` 指令，你会受到冷却时间限制。
-3.  使用 `/taisele` 指令，你会受到冷却时间限制。
-4.  使用 `/setucd <冷却时间>` (例如 `/setucd 30`) 设置冷却时间，单位为秒。
-# 支持
+原作者仓库：[rikkamiss/astrbot_plugin_lolicon_image](https://github.com/rikkamiss/astrbot_plugin_lolicon_image)
 
-[帮助文档](https://astrbot.soulter.top/center/docs/%E5%BC%80%E5%8F%91/%E6%8F%92%E4%BB%B6%E5%BC%80%E5%8F%91/
-)
+## 功能
+
+- `/setu`、`/色图`、`/涩图`、`/色色`、`/涩涩` — 随机涩图（支持关键词搜索）
+- `/taisele`、`/不够色`、`/再色点`、`/不够涩` — R18 图片（需配置启用）
+- `/setucd <秒>` — 设置冷却时间（持久化到配置文件）
+- `/setu_help` — 查看帮助和当前配置
+- LLM 工具自动注册：对话中提到"色图/涩图/来张图"等意图时 LLM 可自动调用
+
+## 图源切换
+
+通过 `api_provider` 配置项切换 API 提供方，两者请求/响应格式由插件自动适配：
+
+| 能力 | lolicon | mossia |
+|------|---------|--------|
+| 默认地址 | `https://api.lolicon.app/setu/v2` | `https://api.mossia.top/duckMo` |
+| 关键词搜索 | 多 tag 空格分隔（AND 取交集） | 仅作者名模糊搜索 |
+| R18 模式 | 支持 0/1/2（含 mixed 混合） | 仅 0/1，mixed 自动降级为 0 |
+| 排除 AI | 支持（excludeAI） | 支持（aiType=1） |
+
+### 关键词搜索示例
+
+lolicon：
+```
+/setu 猫娘 白丝
+```
+
+mossia（按作者名）：
+```
+/setu 作者名
+```
+
+## 配置项
+
+安装后在 AstrBot 管理面板 → 插件配置页修改，所有选项均有默认值，开箱即用。
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| api_provider | string | lolicon | API 提供方：lolicon / mossia |
+| api_url | string | （空） | API 地址覆盖；留空时按 provider 自动选择默认地址，可填入自建反代 |
+| cooldown | int | 10 | 冷却时间（秒），0 表示不限制 |
+| cd_scope | string | user | 冷却范围：user / group |
+| max_concurrency | int | 10 | 最大并发请求数 |
+| request_timeout | int | 10 | 请求超时（秒） |
+| api_size | string | regular | 向 API 请求的图片尺寸 |
+| display_size | string | small | 消息端渲染尺寸 |
+| proxy | string | （空） | HTTP 代理地址 |
+| image_cdn_replace | string | （空） | 替换 pixiv 图片域名为自定义反代 |
+| exclude_ai | bool | false | 排除 AI 生成图片 |
+| show_image_info | bool | false | 随图展示标题/作者/PID/标签 |
+| r18_mode | string | off | off / on / mixed |
+| enable_r18_command | bool | true | 是否启用 /taisele 等 R18 指令 |
+| r18_in_group | bool | false | 群聊是否允许 R18 |
+| enable_llm_tool | bool | true | 向 LLM 注册 send_setu_image 工具 |
+| tip_message | string | 来咯 👇 | 发图前的提示语，留空不发 |
+| whitelist_users | list | [] | 用户白名单（启用后仅白名单可用） |
+| whitelist_groups | list | [] | 群聊白名单 |
+| blacklist_users | list | [] | 用户黑名单 |
+| blacklist_groups | list | [] | 群聊黑名单 |
+| r18_whitelist_users | list | [] | R18 用户白名单（启用后仅白名单用户可触发 R18） |
+| r18_whitelist_groups | list | [] | R18 群聊白名单 |
+| r18_blacklist_users | list | [] | R18 用户黑名单（即使 r18_mode=on 也禁止） |
+| r18_blacklist_groups | list | [] | R18 群聊黑名单（即使 r18_in_group=true 也禁止） |
+
+## 安装
+
+将本目录放入 AstrBot 的 `addons/plugins/` 下，重启即可。
