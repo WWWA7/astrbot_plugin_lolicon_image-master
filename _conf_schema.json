@@ -104,6 +104,12 @@
     "hint": "留空表示不发送提示语",
     "default": "来咯 👇"
   },
+  "cd_tip_message": {
+    "description": "冷却中提示语",
+    "type": "string",
+    "hint": "用户在 CD 内再次调用时的回复；可用 {remaining} 占位剩余秒数（保留一位小数），{cd} 占位总冷却时间",
+    "default": "急什么，罚你停鹿 {remaining} 秒"
+  },
   "whitelist_users": {
     "description": "用户白名单",
     "type": "list",

@@ -1,5 +1,7 @@
 import asyncio
+import base64
 import json
+import re
 from typing import Optional, Tuple
 
 import httpx
@@ -71,7 +73,11 @@ class SendSetuTool(FunctionTool[AstrAgentContext]):
             tip = (plugin.config.get("tip_message", "来咯 👇") or "").strip()
             if tip:
                 mc = mc.message(tip)
-            mc = mc.image(url)
+            b64 = await plugin._download_image_b64(url)
+            if b64:
+                mc = mc.image(f"base64://{b64}")
+            else:
+                mc = mc.image(url)
             if plugin.config.get("show_image_info", False) and info:
                 mc = mc.message("\n" + info)
             await ctx.send_message(event.unified_msg_origin, mc)
@@ -212,6 +218,35 @@ class SetuPlugin(Star):
             resp = await client.get(url, params=params)
             resp.raise_for_status()
             return resp.json()
+
+    async def _download_image_b64(self, url: str) -> Optional[str]:
+        timeout = float(self.config.get("request_timeout", 10) or 10)
+        proxy = (self.config.get("proxy") or "").strip()
+        client_kwargs = {"timeout": timeout, "follow_redirects": True}
+        if proxy:
+            try:
+                client = httpx.AsyncClient(proxy=proxy, **client_kwargs)
+            except TypeError:
+                client = httpx.AsyncClient(proxies=proxy, **client_kwargs)
+        else:
+            client = httpx.AsyncClient(**client_kwargs)
+        try:
+            async with client:
+                resp = await client.get(url)
+                resp.raise_for_status()
+                content_type = resp.headers.get("content-type", "")
+                if "image" not in content_type and not self._url_has_image_ext(url):
+                    logger.warning(f"[SetuPlugin] 下载内容非图片: {content_type}")
+                    return None
+                return base64.b64encode(resp.content).decode()
+        except Exception as e:
+            logger.error(f"[SetuPlugin] 下载图片失败: {e}")
+            return None
+
+    @staticmethod
+    def _url_has_image_ext(url: str) -> bool:
+        path = url.split("?")[0].split("#")[0].lower()
+        return any(path.endswith(ext) for ext in (".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"))
 
     async def _request_lolicon(self, r18: int, keyword: str):
         api_url = self._get_api_url("lolicon")
@@ -383,7 +418,12 @@ class SetuPlugin(Star):
         cd = self.cd
         if cd > 0 and scope_key in self.last_usage and (now - self.last_usage[scope_key]) < cd:
             remaining = cd - (now - self.last_usage[scope_key])
-            yield event.plain_result(f"急什么，罚你停鹿 {remaining:.1f} 秒")
+            cd_tip = (self.config.get("cd_tip_message") or "急什么，罚你停鹿 {remaining} 秒").strip()
+            try:
+                msg = cd_tip.format(remaining=f"{remaining:.1f}", cd=cd)
+            except (KeyError, ValueError):
+                msg = f"冷却中，请等待 {remaining:.1f} 秒"
+            yield event.plain_result(msg)
             return
 
         keyword = self._extract_keyword(event.message_str, command_names)
@@ -398,11 +438,15 @@ class SetuPlugin(Star):
             if tip:
                 yield event.plain_result(tip)
 
-            display_size = (self.config.get("display_size") or "small").strip() or "small"
-            try:
-                chain = [Image.fromURL(url, size=display_size)]
-            except TypeError:
-                chain = [Image.fromURL(url)]
+            b64 = await self._download_image_b64(url)
+            if b64:
+                chain = [Image.fromBase64(b64)]
+            else:
+                try:
+                    chain = [Image.fromURL(url)]
+                except Exception:
+                    yield event.plain_result("图片下载失败，请稍后重试。")
+                    return
             yield event.chain_result(chain)
 
             if self.config.get("show_image_info", False) and info:
